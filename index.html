@@ -45,14 +45,15 @@ html, body {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    font-size: 20px;
-    padding: 10px 16px;
+    font-size: 32px;        /* större text */
+    padding: 20px 28px;     /* större klickyta */
     background: #222;
     color: white;
     border: none;
     cursor: pointer;
     touch-action: manipulation;
     z-index: 1001;
+    border-radius: 6px;
 }
 
 #settings {
@@ -64,12 +65,16 @@ html, body {
     padding: 15px;
     display: none;
     font-size: 18px;
-    z-index: 1000; /* säkerställer att den ligger över klockan */
+    z-index: 1000;
 }
 
-input {
+#settings div {
+    margin-top: 10px;
+}
+
+input, select {
     font-size: 18px;
-    width: 120px;
+    width: 130px;
 }
 </style>
 </head>
@@ -89,18 +94,31 @@ input {
         Alarmfärg (hex):<br>
         <input type="text" id="alarmColor" value="#00ff00">
     </div>
+    <div>
+        Blinkande kolon:<br>
+        <select id="colonBlink">
+            <option value="true" selected>Ja</option>
+            <option value="false">Nej</option>
+        </select>
+    </div>
+    <div>
+        Textstorlek (% av skärmen):<br>
+        <input type="number" id="textSize" value="45" min="10" max="100">%
+    </div>
 </div>
 
 <script>
 var alarmColor = "#00ff00";  // skarpt grön
 var showColon = true;
+var blinkColon = true;
+var textSizePercent = 0.45;
 var hideSettingsTimer = null;
 
 // uppdatera klockstorlek
 function updateLayout() {
     var w = document.documentElement.clientWidth;
     var h = document.documentElement.clientHeight;
-    var size = Math.min(w, h) * 0.45;
+    var size = Math.min(w, h) * textSizePercent;
     document.getElementById("time").style.fontSize = size + "px";
 }
 
@@ -109,13 +127,16 @@ function updateTime() {
     var d = new Date();
     var h = d.getHours();
     var m = d.getMinutes();
-    var s = d.getSeconds();
 
     document.getElementById("hours").textContent = (h < 10 ? "0" : "") + h;
     document.getElementById("minutes").textContent = (m < 10 ? "0" : "") + m;
 
-    showColon = !showColon;
-    document.getElementById("colon").style.visibility = showColon ? "visible" : "hidden";
+    if(blinkColon){
+        showColon = !showColon;
+        document.getElementById("colon").style.visibility = showColon ? "visible" : "hidden";
+    } else {
+        document.getElementById("colon").style.visibility = "visible";
+    }
 
     document.getElementById("clock").style.color = alarmColor;
 }
@@ -133,13 +154,27 @@ function showSettings() {
 
 var btn = document.getElementById("settingsButton");
 btn.onclick = showSettings;
-btn.ontouchstart = showSettings; // touch support för Surface RT
+btn.ontouchstart = showSettings; // touch support
 
 // ändra larmfärg
 document.getElementById("alarmColor").onchange = function () {
     var v = this.value;
     if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
         alarmColor = v;
+    }
+};
+
+// ändra blinkande kolon
+document.getElementById("colonBlink").onchange = function() {
+    blinkColon = this.value === "true";
+};
+
+// ändra textstorlek
+document.getElementById("textSize").onchange = function() {
+    var val = parseInt(this.value);
+    if(!isNaN(val) && val >= 10 && val <= 100){
+        textSizePercent = val / 100;
+        updateLayout();
     }
 };
 
