@@ -13,7 +13,7 @@ html, body {
     height: 100%;
     overflow: hidden;
     background: black;
-    font-family: Trebuchet MS, Arial, sans-serif;
+    font-family: "Segoe UI", Arial, sans-serif;
 }
 
 #clock {
@@ -32,6 +32,13 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
     white-space: nowrap;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-weight: 600; 
+    text-shadow:
+        1px 0 0 currentColor,
+       -1px 0 0 currentColor,
+        0 1px 0 currentColor,
+        0 -1px 0 currentColor;
 }
 
 #settingsButton {
@@ -43,6 +50,7 @@ html, body {
     background: #222;
     color: white;
     border: none;
+    cursor: pointer;
 }
 
 #settings {
@@ -58,16 +66,12 @@ html, body {
 
 input {
     font-size: 18px;
+    width: 120px;
 }
 </style>
 </head>
 
 <body>
-
-<!-- Osynlig video för att hålla skärmen vaken -->
-<video autoplay loop muted width="1" height="1">
-    <source src="data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAG1wNDFtcDQyaXNvbTY4AAACAGlzb20AAAAAAAEAAQABAAABGm1vb3YAAABsbXZoZAAAAAB8J3gAfCd4AAAC8AAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" type="video/mp4">
-</video>
 
 <div id="clock">
     <div id="time">
@@ -80,25 +84,24 @@ input {
 <div id="settings">
     <div>
         Alarmfärg (hex):<br>
-        <input type="text" id="alarmColor" value="#ff0000">
+        <input type="text" id="alarmColor" value="#00ff00">
     </div>
 </div>
 
 <script>
-var alarmColor = "#ff0000";
-var normalColor = "#00ff00";
+var alarmColor = "#00ff00";  // skarpt grön
 var showColon = true;
 var hideSettingsTimer = null;
 
+// uppdatera klockstorlek
 function updateLayout() {
     var w = document.documentElement.clientWidth;
     var h = document.documentElement.clientHeight;
-
     var size = Math.min(w, h) * 0.45;
-
     document.getElementById("time").style.fontSize = size + "px";
 }
 
+// uppdatera tid och blinkande kolon
 function updateTime() {
     var d = new Date();
     var h = d.getHours();
@@ -110,8 +113,11 @@ function updateTime() {
 
     showColon = !showColon;
     document.getElementById("colon").style.visibility = showColon ? "visible" : "hidden";
+
+    document.getElementById("clock").style.color = alarmColor;
 }
 
+// visa inställningspanelen
 function showSettings() {
     var s = document.getElementById("settings");
     s.style.display = "block";
@@ -124,6 +130,7 @@ function showSettings() {
 
 document.getElementById("settingsButton").onclick = showSettings;
 
+// ändra larmfärg
 document.getElementById("alarmColor").onchange = function () {
     var v = this.value;
     if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
@@ -131,8 +138,10 @@ document.getElementById("alarmColor").onchange = function () {
     }
 };
 
+// anpassa layout vid fönsterändring
 window.onresize = updateLayout;
 
+// initiera klocka
 updateLayout();
 updateTime();
 setInterval(updateTime, 1000);
