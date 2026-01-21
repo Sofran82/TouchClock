@@ -1,145 +1,141 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html>
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=11">
 <title>TouchClock</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 html, body {
     margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
-    background: black;
-    color: #e0e0e0;
-    font-family: "Trebuchet MS", sans-serif;
     overflow: hidden;
+    background: black;
+    font-family: Trebuchet MS, Arial, sans-serif;
 }
 
 #clock {
     position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    color: #00ff00;
+}
+
+#time {
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 28vmin;
-    user-select: none;
+    white-space: nowrap;
 }
 
-#settingsBtn {
+#settingsButton {
     position: absolute;
-    top: 3vmin;
-    right: 3vmin;
-    font-size: 4vmin;
-    padding: 1vmin 2vmin;
-    display: none;
+    bottom: 20px;
+    right: 20px;
+    font-size: 20px;
+    padding: 10px 16px;
+    background: #222;
+    color: white;
+    border: none;
 }
 
 #settings {
     position: absolute;
-    inset: 0;
-    background: black;
+    bottom: 70px;
+    right: 20px;
+    background: #111;
     color: white;
+    padding: 15px;
     display: none;
-    padding: 6vmin;
-    font-size: 4vmin;
+    font-size: 18px;
 }
 
-label {
-    display: block;
-    margin-bottom: 4vmin;
+input {
+    font-size: 18px;
 }
 </style>
 </head>
-<body onclick="showButton()">
+
+<body>
+
+<!-- Osynlig video för att hålla skärmen vaken -->
+<video autoplay loop muted width="1" height="1">
+    <source src="data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAG1wNDFtcDQyaXNvbTY4AAACAGlzb20AAAAAAAEAAQABAAABGm1vb3YAAABsbXZoZAAAAAB8J3gAfCd4AAAC8AAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" type="video/mp4">
+</video>
 
 <div id="clock">
-    <span id="hours">00</span><span id="colon">:</span><span id="minutes">00</span>
+    <div id="time">
+        <span id="hours">00</span><span id="colon">:</span><span id="minutes">00</span>
+    </div>
 </div>
 
-<button id="settingsBtn" onclick="openSettings()">Inställningar</button>
+<button id="settingsButton">⚙</button>
 
 <div id="settings">
-    <label>Start:
-        <input type="time" id="colorStart">
-    </label>
-    <label>Slut:
-        <input type="time" id="colorEnd">
-    </label>
-    <label>Larmfärg:
-        <input type="color" id="alarmColor">
-    </label>
-    <button onclick="closeSettings()">Stäng</button>
+    <div>
+        Alarmfärg (hex):<br>
+        <input type="text" id="alarmColor" value="#ff0000">
+    </div>
 </div>
 
 <script>
-var hideTimer;
+var alarmColor = "#ff0000";
+var normalColor = "#00ff00";
+var showColon = true;
+var hideSettingsTimer = null;
 
-function updateClock(){
-    var now = new Date();
-    var h = ("0"+now.getHours()).slice(-2);
-    var m = ("0"+now.getMinutes()).slice(-2);
-    var s = now.getSeconds();
+function updateLayout() {
+    var w = document.documentElement.clientWidth;
+    var h = document.documentElement.clientHeight;
 
-    document.getElementById("hours").innerHTML = h;
-    document.getElementById("minutes").innerHTML = m;
-    document.getElementById("colon").style.visibility = (s % 2 === 0) ? "visible" : "hidden";
+    var size = Math.min(w, h) * 0.45;
 
-    applyAlarmColor(now);
+    document.getElementById("time").style.fontSize = size + "px";
 }
 
-function applyAlarmColor(now){
-    var start = toMin(document.getElementById("colorStart").value);
-    var end = toMin(document.getElementById("colorEnd").value);
-    var cur = now.getHours()*60 + now.getMinutes();
+function updateTime() {
+    var d = new Date();
+    var h = d.getHours();
+    var m = d.getMinutes();
+    var s = d.getSeconds();
 
-    var active = start < end
-        ? cur >= start && cur < end
-        : cur >= start || cur < end;
+    document.getElementById("hours").textContent = (h < 10 ? "0" : "") + h;
+    document.getElementById("minutes").textContent = (m < 10 ? "0" : "") + m;
 
-    var color = active
-        ? document.getElementById("alarmColor").value
-        : "#e0e0e0";
-
-    document.getElementById("clock").style.color = color;
+    showColon = !showColon;
+    document.getElementById("colon").style.visibility = showColon ? "visible" : "hidden";
 }
 
-function toMin(t){
-    var p = t.split(":");
-    return parseInt(p[0])*60 + parseInt(p[1]);
-}
+function showSettings() {
+    var s = document.getElementById("settings");
+    s.style.display = "block";
 
-function showButton(){
-    var btn = document.getElementById("settingsBtn");
-    btn.style.display = "block";
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(function(){
-        btn.style.display = "none";
+    if (hideSettingsTimer) clearTimeout(hideSettingsTimer);
+    hideSettingsTimer = setTimeout(function () {
+        s.style.display = "none";
     }, 5000);
 }
 
-function openSettings(){
-    document.getElementById("settings").style.display = "block";
-}
+document.getElementById("settingsButton").onclick = showSettings;
 
-function closeSettings(){
-    saveSettings();
-    document.getElementById("settings").style.display = "none";
-}
+document.getElementById("alarmColor").onchange = function () {
+    var v = this.value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+        alarmColor = v;
+    }
+};
 
-function saveSettings(){
-    localStorage.colorStart = document.getElementById("colorStart").value;
-    localStorage.colorEnd = document.getElementById("colorEnd").value;
-    localStorage.alarmColor = document.getElementById("alarmColor").value;
-}
+window.onresize = updateLayout;
 
-function loadSettings(){
-    document.getElementById("colorStart").value = localStorage.colorStart || "22:00";
-    document.getElementById("colorEnd").value = localStorage.colorEnd || "06:00";
-    document.getElementById("alarmColor").value = localStorage.alarmColor || "#ff5555";
-}
-
-loadSettings();
-updateClock();
-setInterval(updateClock, 1000);
+updateLayout();
+updateTime();
+setInterval(updateTime, 1000);
 </script>
 
 </body>
