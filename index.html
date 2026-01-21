@@ -45,8 +45,8 @@ html, body {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    font-size: 32px;        /* större text */
-    padding: 20px 28px;     /* större klickyta */
+    font-size: 32px;
+    padding: 20px 28px;
     background: #222;
     color: white;
     border: none;
@@ -92,29 +92,70 @@ input, select {
 <div id="settings">
     <div>
         Alarmfärg (hex):<br>
-        <input type="text" id="alarmColor" value="#00ff00">
+        <input type="text" id="alarmColor">
     </div>
     <div>
         Blinkande kolon:<br>
         <select id="colonBlink">
-            <option value="true" selected>Ja</option>
+            <option value="true">Ja</option>
             <option value="false">Nej</option>
         </select>
     </div>
     <div>
         Textstorlek (% av skärmen):<br>
-        <input type="number" id="textSize" value="45" min="10" max="100">%
+        <input type="number" id="textSize" min="10" max="100">%
+    </div>
+    <div>
+        Larm starttid (HH:MM):<br>
+        <input type="time" id="alarmStart">
+    </div>
+    <div>
+        Larm sluttid (HH:MM):<br>
+        <input type="time" id="alarmEnd">
     </div>
 </div>
 
 <script>
-var alarmColor = "#00ff00";  // skarpt grön
 var showColon = true;
 var blinkColon = true;
-var textSizePercent = 0.45;
+var textSizePercent = 0.9; // dubbelt så stor som tidigare 0.45
+var alarmColor = "#00ff00";
+var normalColor = "#00ff00";
 var hideSettingsTimer = null;
+var alarmStart = "06:00";
+var alarmEnd = "08:00";
 
-// uppdatera klockstorlek
+// --- Load saved settings ---
+if (localStorage.getItem("alarmColor")) {
+    alarmColor = localStorage.getItem("alarmColor");
+    document.getElementById("alarmColor").value = alarmColor;
+} else {
+    document.getElementById("alarmColor").value = alarmColor;
+}
+
+if (localStorage.getItem("blinkColon")) {
+    blinkColon = localStorage.getItem("blinkColon") === "true";
+    document.getElementById("colonBlink").value = blinkColon ? "true" : "false";
+}
+
+if (localStorage.getItem("textSizePercent")) {
+    textSizePercent = parseFloat(localStorage.getItem("textSizePercent"));
+    document.getElementById("textSize").value = Math.round(textSizePercent * 100);
+} else {
+    document.getElementById("textSize").value = Math.round(textSizePercent * 100);
+}
+
+if (localStorage.getItem("alarmStart")) {
+    alarmStart = localStorage.getItem("alarmStart");
+}
+document.getElementById("alarmStart").value = alarmStart;
+
+if (localStorage.getItem("alarmEnd")) {
+    alarmEnd = localStorage.getItem("alarmEnd");
+}
+document.getElementById("alarmEnd").value = alarmEnd;
+
+// --- Layout ---
 function updateLayout() {
     var w = document.documentElement.clientWidth;
     var h = document.documentElement.clientHeight;
@@ -122,11 +163,12 @@ function updateLayout() {
     document.getElementById("time").style.fontSize = size + "px";
 }
 
-// uppdatera tid och blinkande kolon
+// --- Time update ---
 function updateTime() {
     var d = new Date();
     var h = d.getHours();
     var m = d.getMinutes();
+    var hhmm = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
 
     document.getElementById("hours").textContent = (h < 10 ? "0" : "") + h;
     document.getElementById("minutes").textContent = (m < 10 ? "0" : "") + m;
@@ -138,10 +180,15 @@ function updateTime() {
         document.getElementById("colon").style.visibility = "visible";
     }
 
-    document.getElementById("clock").style.color = alarmColor;
+    // ändra färg om inom larmtid
+    if(hhmm >= alarmStart && hhmm <= alarmEnd){
+        document.getElementById("clock").style.color = alarmColor;
+    } else {
+        document.getElementById("clock").style.color = normalColor;
+    }
 }
 
-// visa inställningspanelen
+// --- Show settings ---
 function showSettings() {
     var s = document.getElementById("settings");
     s.style.display = "block";
@@ -154,34 +201,43 @@ function showSettings() {
 
 var btn = document.getElementById("settingsButton");
 btn.onclick = showSettings;
-btn.ontouchstart = showSettings; // touch support
+btn.ontouchstart = showSettings;
 
-// ändra larmfärg
+// --- Settings events ---
 document.getElementById("alarmColor").onchange = function () {
     var v = this.value;
-    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+    if(/^#[0-9A-Fa-f]{6}$/.test(v)){
         alarmColor = v;
+        localStorage.setItem("alarmColor", alarmColor);
     }
 };
 
-// ändra blinkande kolon
 document.getElementById("colonBlink").onchange = function() {
     blinkColon = this.value === "true";
+    localStorage.setItem("blinkColon", blinkColon);
 };
 
-// ändra textstorlek
 document.getElementById("textSize").onchange = function() {
     var val = parseInt(this.value);
     if(!isNaN(val) && val >= 10 && val <= 100){
         textSizePercent = val / 100;
+        localStorage.setItem("textSizePercent", textSizePercent);
         updateLayout();
     }
 };
 
-// anpassa layout vid fönsterändring
-window.onresize = updateLayout;
+document.getElementById("alarmStart").onchange = function() {
+    alarmStart = this.value;
+    localStorage.setItem("alarmStart", alarmStart);
+};
 
-// initiera klocka
+document.getElementById("alarmEnd").onchange = function() {
+    alarmEnd = this.value;
+    localStorage.setItem("alarmEnd", alarmEnd);
+};
+
+// --- Init ---
+window.onresize = updateLayout;
 updateLayout();
 updateTime();
 setInterval(updateTime, 1000);
