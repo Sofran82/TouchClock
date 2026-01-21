@@ -2,147 +2,144 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<title>Touch Clock – Web-version</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TouchClock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html, body {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    background: black; color: #e0e0e0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    color: #e0e0e0;
     font-family: "Trebuchet MS", sans-serif;
-    overflow: hidden; touch-action: manipulation;
+    overflow: hidden;
 }
-#clock { display: flex; justify-content: center; align-items: center; height: 100%; position: relative; }
-#hours, #minutes, #colon { display: inline-block; }
 
-#settings {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.95);
-    color: white; display: none; flex-direction: column;
-    padding: 6vmin; font-size: 4vmin;
+#clock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28vmin;
+    user-select: none;
 }
-label { margin-bottom: 4vmin; }
-input, button { font-size: 4vmin; margin-top: 1vmin; }
 
 #settingsBtn {
     position: absolute;
-    top: 5%;
-    right: 5%;
+    top: 3vmin;
+    right: 3vmin;
     font-size: 4vmin;
-    padding: 0.5em 1em;
-    z-index: 1000;
+    padding: 1vmin 2vmin;
+    display: none;
+}
+
+#settings {
+    position: absolute;
+    inset: 0;
+    background: black;
+    color: white;
+    display: none;
+    padding: 6vmin;
+    font-size: 4vmin;
+}
+
+label {
+    display: block;
+    margin-bottom: 4vmin;
 }
 </style>
 </head>
-<body>
+<body onclick="showButton()">
 
 <div id="clock">
     <span id="hours">00</span><span id="colon">:</span><span id="minutes">00</span>
 </div>
 
-<button id="settingsBtn">Inställningar</button>
+<button id="settingsBtn" onclick="openSettings()">Inställningar</button>
 
 <div id="settings">
-    <label>Färgintervall start:<input type="time" id="colorStart"></label>
-    <label>Färgintervall slut:<input type="time" id="colorEnd"></label>
-    <label>Larmfärg:<input type="color" id="alarmColor" value="#ff5555"></label>
+    <label>Start:
+        <input type="time" id="colorStart">
+    </label>
+    <label>Slut:
+        <input type="time" id="colorEnd">
+    </label>
+    <label>Larmfärg:
+        <input type="color" id="alarmColor">
+    </label>
     <button onclick="closeSettings()">Stäng</button>
 </div>
 
 <script>
-const hoursEl = document.getElementById("hours");
-const minutesEl = document.getElementById("minutes");
-const colonEl = document.getElementById("colon");
-const timeEl = document.getElementById("clock");
-const settingsEl = document.getElementById("settings");
-const settingsBtn = document.getElementById("settingsBtn");
-let hideBtnTimer;
+var hideTimer;
 
-// ===== Inställningar =====
-function loadSettings(){
-    document.getElementById("colorStart").value = localStorage.getItem("colorStart") || "22:00";
-    document.getElementById("colorEnd").value = localStorage.getItem("colorEnd") || "06:00";
-    document.getElementById("alarmColor").value = localStorage.getItem("alarmColor") || "#ff5555";
-}
-function saveSettings(){
-    localStorage.setItem("colorStart", document.getElementById("colorStart").value);
-    localStorage.setItem("colorEnd", document.getElementById("colorEnd").value);
-    localStorage.setItem("alarmColor", document.getElementById("alarmColor").value);
-}
-
-// ===== Layout: maxstorlek på timme och minut =====
-function updateLayout(){
-    const w = window.innerWidth, h = window.innerHeight;
-    const margin = Math.min(w,h)*0.05;
-
-    const tester = document.createElement("div");
-    tester.style.position="absolute"; tester.style.visibility="hidden"; tester.style.whiteSpace="nowrap";
-    tester.style.fontFamily = "Trebuchet MS, sans-serif";
-    document.body.appendChild(tester);
-
-    // Timme
-    tester.textContent = "88";
-    let fontHour = 10;
-    while(true){
-        tester.style.fontSize = fontHour+"px";
-        if(tester.offsetWidth > (w-margin*2)/2 || tester.offsetHeight>h-margin*2){ fontHour-=2; break; }
-        fontHour+=2;
-    }
-    hoursEl.style.fontSize = fontHour+"px";
-
-    // Minut matchar timmen
-    minutesEl.style.fontSize = fontHour+"px";
-    colonEl.style.fontSize = fontHour+"px";
-
-    document.body.removeChild(tester);
-}
-
-// ===== Uppdatera klockan =====
 function updateClock(){
-    const now = new Date();
-    const h = now.getHours().toString().padStart(2,"0");
-    const m = now.getMinutes().toString().padStart(2,"0");
-    const s = now.getSeconds();
-    hoursEl.textContent = h;
-    minutesEl.textContent = m;
+    var now = new Date();
+    var h = ("0"+now.getHours()).slice(-2);
+    var m = ("0"+now.getMinutes()).slice(-2);
+    var s = now.getSeconds();
 
-    // Blinkande kolon
-    colonEl.style.visibility = (s%2===0) ? "visible" : "hidden";
+    document.getElementById("hours").innerHTML = h;
+    document.getElementById("minutes").innerHTML = m;
+    document.getElementById("colon").style.visibility = (s % 2 === 0) ? "visible" : "hidden";
 
-    // Larmfärg
-    const start = toMin(document.getElementById("colorStart").value);
-    const end = toMin(document.getElementById("colorEnd").value);
-    const cur = now.getHours()*60 + now.getMinutes();
-    const active = start < end ? cur >= start && cur < end : cur >= start || cur < end;
-
-    const alarmColor = document.getElementById("alarmColor").value;
-    hoursEl.style.color = minutesEl.style.color = colonEl.style.color = active ? alarmColor : "#e0e0e0";
+    applyAlarmColor(now);
 }
 
-function toMin(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+function applyAlarmColor(now){
+    var start = toMin(document.getElementById("colorStart").value);
+    var end = toMin(document.getElementById("colorEnd").value);
+    var cur = now.getHours()*60 + now.getMinutes();
 
-// ===== Touch: visa knapp =====
-document.body.addEventListener("click", () => {
-    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-    settingsBtn.style.display = "block";
-    clearTimeout(hideBtnTimer);
-    hideBtnTimer = setTimeout(()=>{settingsBtn.style.display="none";}, 5000);
-});
+    var active = start < end
+        ? cur >= start && cur < end
+        : cur >= start || cur < end;
 
-// ===== Öppna inställningar =====
-settingsBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    openSettings();
-    clearTimeout(hideBtnTimer);
-    settingsBtn.style.display = "block";
-});
-function openSettings(){settingsEl.style.display="flex";}
-function closeSettings(){saveSettings(); settingsEl.style.display="none";}
+    var color = active
+        ? document.getElementById("alarmColor").value
+        : "#e0e0e0";
 
-// ===== Init =====
+    document.getElementById("clock").style.color = color;
+}
+
+function toMin(t){
+    var p = t.split(":");
+    return parseInt(p[0])*60 + parseInt(p[1]);
+}
+
+function showButton(){
+    var btn = document.getElementById("settingsBtn");
+    btn.style.display = "block";
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function(){
+        btn.style.display = "none";
+    }, 5000);
+}
+
+function openSettings(){
+    document.getElementById("settings").style.display = "block";
+}
+
+function closeSettings(){
+    saveSettings();
+    document.getElementById("settings").style.display = "none";
+}
+
+function saveSettings(){
+    localStorage.colorStart = document.getElementById("colorStart").value;
+    localStorage.colorEnd = document.getElementById("colorEnd").value;
+    localStorage.alarmColor = document.getElementById("alarmColor").value;
+}
+
+function loadSettings(){
+    document.getElementById("colorStart").value = localStorage.colorStart || "22:00";
+    document.getElementById("colorEnd").value = localStorage.colorEnd || "06:00";
+    document.getElementById("alarmColor").value = localStorage.alarmColor || "#ff5555";
+}
+
 loadSettings();
-updateLayout();
 updateClock();
-setInterval(updateClock,1000);
-window.addEventListener("resize", updateLayout);
+setInterval(updateClock, 1000);
 </script>
 
 </body>
