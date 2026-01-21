@@ -45,24 +45,24 @@ html, body {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    font-size: 32px;
-    padding: 20px 28px;
+    font-size: 48px;       /* större ikon */
+    padding: 28px 36px;    /* större klickyta */
     background: #222;
     color: white;
     border: none;
     cursor: pointer;
     touch-action: manipulation;
     z-index: 1001;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 #settings {
     position: absolute;
-    bottom: 70px;
+    bottom: 90px;
     right: 20px;
     background: #111;
     color: white;
-    padding: 15px;
+    padding: 20px;
     display: none;
     font-size: 18px;
     z-index: 1000;
@@ -74,7 +74,7 @@ html, body {
 
 input, select {
     font-size: 18px;
-    width: 130px;
+    width: 140px;
 }
 </style>
 </head>
@@ -118,32 +118,27 @@ input, select {
 <script>
 var showColon = true;
 var blinkColon = true;
-var textSizePercent = 0.9; // dubbelt så stor som tidigare
+var textSizePercent = 0.9; // dubbelt så stor
 var alarmColor = "#00ff00";
 var normalColor = "#ffffff"; // vit normalfärg
-var hideSettingsTimer = null;
 var alarmStart = "06:00";
 var alarmEnd = "08:00";
 
 // --- Load saved settings ---
 if (localStorage.getItem("alarmColor")) {
     alarmColor = localStorage.getItem("alarmColor");
-    document.getElementById("alarmColor").value = alarmColor;
-} else {
-    document.getElementById("alarmColor").value = alarmColor;
 }
+document.getElementById("alarmColor").value = alarmColor;
 
 if (localStorage.getItem("blinkColon")) {
     blinkColon = localStorage.getItem("blinkColon") === "true";
-    document.getElementById("colonBlink").value = blinkColon ? "true" : "false";
 }
+document.getElementById("colonBlink").value = blinkColon ? "true" : "false";
 
 if (localStorage.getItem("textSizePercent")) {
     textSizePercent = parseFloat(localStorage.getItem("textSizePercent"));
-    document.getElementById("textSize").value = Math.round(textSizePercent * 100);
-} else {
-    document.getElementById("textSize").value = Math.round(textSizePercent * 100);
 }
+document.getElementById("textSize").value = Math.round(textSizePercent * 100);
 
 if (localStorage.getItem("alarmStart")) {
     alarmStart = localStorage.getItem("alarmStart");
@@ -188,20 +183,19 @@ function updateTime() {
     }
 }
 
-// --- Show settings ---
-function showSettings() {
+// --- Toggle settings panel ---
+function toggleSettings() {
     var s = document.getElementById("settings");
-    s.style.display = "block";
-
-    if (hideSettingsTimer) clearTimeout(hideSettingsTimer);
-    hideSettingsTimer = setTimeout(function () {
+    if(s.style.display === "block") {
         s.style.display = "none";
-    }, 5000);
+    } else {
+        s.style.display = "block";
+    }
 }
 
 var btn = document.getElementById("settingsButton");
-btn.onclick = showSettings;
-btn.ontouchstart = showSettings;
+btn.onclick = toggleSettings;
+btn.ontouchstart = toggleSettings;
 
 // --- Settings events ---
 document.getElementById("alarmColor").onchange = function () {
