@@ -51,6 +51,8 @@ html, body {
     color: white;
     border: none;
     cursor: pointer;
+    touch-action: manipulation;
+    z-index: 1001;
 }
 
 #settings {
@@ -62,6 +64,7 @@ html, body {
     padding: 15px;
     display: none;
     font-size: 18px;
+    z-index: 1000; /* säkerställer att den ligger över klockan */
 }
 
 input {
@@ -128,7 +131,9 @@ function showSettings() {
     }, 5000);
 }
 
-document.getElementById("settingsButton").onclick = showSettings;
+var btn = document.getElementById("settingsButton");
+btn.onclick = showSettings;
+btn.ontouchstart = showSettings; // touch support för Surface RT
 
 // ändra larmfärg
 document.getElementById("alarmColor").onchange = function () {
