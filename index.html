@@ -22,18 +22,20 @@ html, body {
     top: 0;
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
     color: #ffffff;
 }
 
 #time {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    white-space: nowrap;
     font-weight: 600;
-    text-shadow: 1px 0 0 currentColor, -1px 0 0 currentColor, 0 1px 0 currentColor, 0 -1px 0 currentColor;
+    text-shadow:
+        1px 0 0 currentColor,
+       -1px 0 0 currentColor,
+        0 1px 0 currentColor,
+        0 -1px 0 currentColor;
 }
 
 #settingsButton {
@@ -49,6 +51,8 @@ html, body {
     touch-action: manipulation;
     z-index: 1001;
     border-radius: 10px;
+    display: none; /* osynlig som standard */
+    transition: opacity 0.3s;
 }
 
 #settings {
@@ -132,8 +136,9 @@ var alarmColor = "#00ff00";
 var normalColor = "#ffffff";
 var alarmStart = "06:00";
 var alarmEnd = "08:00";
+var buttonTimer = null;
 
-// Load saved settings
+// --- Load saved settings ---
 if (localStorage.getItem("alarmColor")) alarmColor = localStorage.getItem("alarmColor");
 document.getElementById("alarmColor").value = alarmColor;
 
@@ -149,7 +154,7 @@ document.getElementById("alarmStart").value = alarmStart;
 if (localStorage.getItem("alarmEnd")) alarmEnd = localStorage.getItem("alarmEnd");
 document.getElementById("alarmEnd").value = alarmEnd;
 
-// Layout
+// --- Layout ---
 function updateLayout() {
     var w = document.documentElement.clientWidth;
     var h = document.documentElement.clientHeight;
@@ -157,7 +162,7 @@ function updateLayout() {
     document.getElementById("time").style.fontSize = size + "px";
 }
 
-// Time update
+// --- Time update ---
 function updateTime() {
     var d = new Date();
     var h = d.getHours();
@@ -177,17 +182,31 @@ function updateTime() {
     document.getElementById("clock").style.color = (hhmm >= alarmStart && hhmm <= alarmEnd) ? alarmColor : normalColor;
 }
 
-// Toggle settings panel
+// --- Toggle settings panel ---
 function toggleSettings() {
     var s = document.getElementById("settings");
     s.style.display = (s.style.display === "block") ? "none" : "block";
+}
+
+// --- Show settings button on touch ---
+function showSettingsButton() {
+    var btn = document.getElementById("settingsButton");
+    btn.style.display = "block";
+
+    if(buttonTimer) clearTimeout(buttonTimer);
+    buttonTimer = setTimeout(function() {
+        btn.style.display = "none";
+    }, 5000);
 }
 
 var btn = document.getElementById("settingsButton");
 btn.onclick = toggleSettings;
 btn.ontouchstart = toggleSettings;
 
-// Settings events
+// Show button when screen touched
+document.body.ontouchstart = document.body.onclick = showSettingsButton;
+
+// --- Settings events ---
 document.getElementById("alarmColor").onchange = function () {
     alarmColor = this.value;
     localStorage.setItem("alarmColor", alarmColor);
@@ -217,7 +236,7 @@ document.getElementById("alarmEnd").onchange = function() {
     localStorage.setItem("alarmEnd", alarmEnd);
 };
 
-// Init
+// --- Init ---
 window.onresize = updateLayout;
 updateLayout();
 updateTime();
