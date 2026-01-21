@@ -23,7 +23,7 @@ html, body {
     width: 100%;
     height: 100%;
     text-align: center;
-    color: #ffffff; /* initial normalfärg */
+    color: #ffffff;
 }
 
 #time {
@@ -32,49 +32,58 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
     white-space: nowrap;
-    font-family: "Segoe UI", Arial, sans-serif;
-    font-weight: 600; 
-    text-shadow:
-        1px 0 0 currentColor,
-       -1px 0 0 currentColor,
-        0 1px 0 currentColor,
-        0 -1px 0 currentColor;
+    font-weight: 600;
+    text-shadow: 1px 0 0 currentColor, -1px 0 0 currentColor, 0 1px 0 currentColor, 0 -1px 0 currentColor;
 }
 
 #settingsButton {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    font-size: 48px;       /* större ikon */
-    padding: 28px 36px;    /* större klickyta */
+    font-size: 64px;
+    padding: 36px 40px;
     background: #222;
     color: white;
     border: none;
     cursor: pointer;
     touch-action: manipulation;
     z-index: 1001;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 #settings {
     position: absolute;
-    bottom: 90px;
+    bottom: 100px;
     right: 20px;
     background: #111;
     color: white;
     padding: 20px;
     display: none;
-    font-size: 18px;
+    font-size: 22px;
     z-index: 1000;
+    max-height: 70%;
+    overflow-y: auto;
+    border-radius: 10px;
 }
 
 #settings div {
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
-input, select {
-    font-size: 18px;
-    width: 140px;
+input[type="number"], select, input[type="time"] {
+    font-size: 22px;
+    width: 180px;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+input[type="color"] {
+    width: 100%;
+    height: 50px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
 }
 </style>
 </head>
@@ -91,8 +100,8 @@ input, select {
 
 <div id="settings">
     <div>
-        Alarmfärg (hex):<br>
-        <input type="text" id="alarmColor">
+        Alarmfärg:<br>
+        <input type="color" id="alarmColor">
     </div>
     <div>
         Blinkande kolon:<br>
@@ -106,11 +115,11 @@ input, select {
         <input type="number" id="textSize" min="10" max="100">%
     </div>
     <div>
-        Larm starttid (HH:MM):<br>
+        Larm starttid:<br>
         <input type="time" id="alarmStart">
     </div>
     <div>
-        Larm sluttid (HH:MM):<br>
+        Larm sluttid:<br>
         <input type="time" id="alarmEnd">
     </div>
 </div>
@@ -118,39 +127,29 @@ input, select {
 <script>
 var showColon = true;
 var blinkColon = true;
-var textSizePercent = 0.9; // dubbelt så stor
+var textSizePercent = 0.9;
 var alarmColor = "#00ff00";
-var normalColor = "#ffffff"; // vit normalfärg
+var normalColor = "#ffffff";
 var alarmStart = "06:00";
 var alarmEnd = "08:00";
 
-// --- Load saved settings ---
-if (localStorage.getItem("alarmColor")) {
-    alarmColor = localStorage.getItem("alarmColor");
-}
+// Load saved settings
+if (localStorage.getItem("alarmColor")) alarmColor = localStorage.getItem("alarmColor");
 document.getElementById("alarmColor").value = alarmColor;
 
-if (localStorage.getItem("blinkColon")) {
-    blinkColon = localStorage.getItem("blinkColon") === "true";
-}
+if (localStorage.getItem("blinkColon")) blinkColon = localStorage.getItem("blinkColon") === "true";
 document.getElementById("colonBlink").value = blinkColon ? "true" : "false";
 
-if (localStorage.getItem("textSizePercent")) {
-    textSizePercent = parseFloat(localStorage.getItem("textSizePercent"));
-}
+if (localStorage.getItem("textSizePercent")) textSizePercent = parseFloat(localStorage.getItem("textSizePercent"));
 document.getElementById("textSize").value = Math.round(textSizePercent * 100);
 
-if (localStorage.getItem("alarmStart")) {
-    alarmStart = localStorage.getItem("alarmStart");
-}
+if (localStorage.getItem("alarmStart")) alarmStart = localStorage.getItem("alarmStart");
 document.getElementById("alarmStart").value = alarmStart;
 
-if (localStorage.getItem("alarmEnd")) {
-    alarmEnd = localStorage.getItem("alarmEnd");
-}
+if (localStorage.getItem("alarmEnd")) alarmEnd = localStorage.getItem("alarmEnd");
 document.getElementById("alarmEnd").value = alarmEnd;
 
-// --- Layout ---
+// Layout
 function updateLayout() {
     var w = document.documentElement.clientWidth;
     var h = document.documentElement.clientHeight;
@@ -158,7 +157,7 @@ function updateLayout() {
     document.getElementById("time").style.fontSize = size + "px";
 }
 
-// --- Time update ---
+// Time update
 function updateTime() {
     var d = new Date();
     var h = d.getHours();
@@ -175,35 +174,23 @@ function updateTime() {
         document.getElementById("colon").style.visibility = "visible";
     }
 
-    // ändra färg endast inom larmtid
-    if(hhmm >= alarmStart && hhmm <= alarmEnd){
-        document.getElementById("clock").style.color = alarmColor;
-    } else {
-        document.getElementById("clock").style.color = normalColor;
-    }
+    document.getElementById("clock").style.color = (hhmm >= alarmStart && hhmm <= alarmEnd) ? alarmColor : normalColor;
 }
 
-// --- Toggle settings panel ---
+// Toggle settings panel
 function toggleSettings() {
     var s = document.getElementById("settings");
-    if(s.style.display === "block") {
-        s.style.display = "none";
-    } else {
-        s.style.display = "block";
-    }
+    s.style.display = (s.style.display === "block") ? "none" : "block";
 }
 
 var btn = document.getElementById("settingsButton");
 btn.onclick = toggleSettings;
 btn.ontouchstart = toggleSettings;
 
-// --- Settings events ---
+// Settings events
 document.getElementById("alarmColor").onchange = function () {
-    var v = this.value;
-    if(/^#[0-9A-Fa-f]{6}$/.test(v)){
-        alarmColor = v;
-        localStorage.setItem("alarmColor", alarmColor);
-    }
+    alarmColor = this.value;
+    localStorage.setItem("alarmColor", alarmColor);
 };
 
 document.getElementById("colonBlink").onchange = function() {
@@ -230,7 +217,7 @@ document.getElementById("alarmEnd").onchange = function() {
     localStorage.setItem("alarmEnd", alarmEnd);
 };
 
-// --- Init ---
+// Init
 window.onresize = updateLayout;
 updateLayout();
 updateTime();
